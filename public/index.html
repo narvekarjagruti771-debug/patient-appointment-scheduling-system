@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MediFlow | Patient Appointment Scheduling System</title>
+  <meta name="description" content="A premium database management system for scheduling patient appointments, featuring SQL views, triggers, and cursor-based reports.">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background decorative glows -->
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+  <div class="bg-glow bg-glow-3"></div>
+
+  <!-- Notification Banner -->
+  <div id="alert-banner" class="alert-banner hidden">
+    <span class="alert-message" id="alert-text">Notification message</span>
+    <button class="alert-close" onclick="closeAlert()">&times;</button>
+  </div>
+
+  <!-- ====================================================================
+       1. ROLE SELECTION / LANDING SCREEN
+       ==================================================================== -->
+  <div id="portal-landing" class="landing-container active-screen">
+    <header class="landing-header">
+      <div class="logo-badge"><i class="fa-solid fa-house-medical"></i> MediFlow</div>
+      <h1>Patient Appointment Hub</h1>
+      <p class="subtitle">A beginner-friendly DBMS demonstration. Select a customized portal to begin.</p>
+    </header>
+
+    <div class="role-grid">
+      <!-- Card: Patient Portal -->
+      <div class="role-card patient-theme-card" onclick="enterPortal('patient')">
+        <div class="role-icon-box">
+          <i class="fa-solid fa-user-injured"></i>
+        </div>
+        <h3>Patient Portal</h3>
+        <p>Register a health profile, book appointment slots with doctors, and view your personal scheduling history.</p>
+        <span class="action-hint">Enter Portal <i class="fa-solid fa-arrow-right"></i></span>
+      </div>
+
+      <!-- Card: Doctor Workspace -->
+      <div class="role-card doctor-theme-card" onclick="enterPortal('doctor')">
+        <div class="role-icon-box">
+          <i class="fa-solid fa-user-md"></i>
+        </div>
+        <h3>Doctor Workspace</h3>
+        <p>Review your personal clinic schedule, complete/cancel visits (fires database triggers), and run cursor reports.</p>
+        <span class="action-hint text-green">Access Console <i class="fa-solid fa-arrow-right"></i></span>
+      </div>
+
+      <!-- Card: DBMS Developer Lab -->
+      <div class="role-card developer-theme-card" onclick="enterPortal('developer')">
+        <div class="role-icon-box">
+          <i class="fa-solid fa-terminal"></i>
+        </div>
+        <h3>DBMS Developer Lab</h3>
+        <p>Monitor global database tables, inspect automated trigger logs, audit reports, and browse the SQL code schema.</p>
+        <span class="action-hint text-purple">Open Sandbox <i class="fa-solid fa-arrow-right"></i></span>
+      </div>
+    </div>
+
+    <footer class="landing-footer">
+      <p>Powered by Node.js, Express, &amp; XAMPP MySQL Database</p>
+      <div class="db-status-badge" id="landing-db-status">
+        <span class="pulse-indicator"></span> Connected to MySQL
+      </div>
+    </footer>
+  </div>
+
+
+  <!-- ====================================================================
+       2. PATIENT PORTAL
+       ==================================================================== -->
+  <div id="portal-patient" class="app-container portal-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar patient-sidebar">
+      <div class="logo-area" onclick="goHome()">
+        <i class="fa-solid fa-user-injured logo-icon icon-patient"></i>
+        <div class="logo-text">
+          <span class="logo-title">Patient Portal</span>
+          <span class="logo-subtitle">MediFlow Clinic</span>
+        </div>
+      </div>
+
+      <div class="profile-selection-box">
+        <label for="patient-selector">Active Patient Profile</label>
+        <select id="patient-selector" onchange="onPatientSelect()">
+          <option value="" disabled selected>-- Select Profile --</option>
+        </select>
+        <button class="btn-sidebar-secondary" onclick="showPatientRegModal()">
+          <i class="fa-solid fa-user-plus"></i> Register New Profile
+        </button>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-btn active" id="btn-p-book" onclick="switchPatientTab('p-book')">
+          <i class="fa-solid fa-calendar-plus"></i> Book Appointment
+        </button>
+        <button class="nav-btn" id="btn-p-history" onclick="switchPatientTab('p-history')">
+          <i class="fa-solid fa-clock-rotate-left"></i> Booking History
+        </button>
+        <button class="nav-btn" id="btn-p-viewinfo" onclick="switchPatientTab('p-viewinfo')">
+          <i class="fa-solid fa-circle-question"></i> How it Works (View)
+        </button>
+      </nav>
+
+      <button class="btn-logout" onclick="goHome()">
+        <i class="fa-solid fa-right-from-bracket"></i> Exit Portal
+      </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="top-header">
+        <div>
+          <h1 id="patient-page-title">Book an Appointment</h1>
+          <p id="patient-page-subtitle">Select your profile to schedule a consultation with our specialist doctors</p>
+        </div>
+        <div class="patient-profile-badge hidden" id="patient-profile-badge">
+          <i class="fa-solid fa-circle-user"></i> <span id="current-patient-name">Patient Name</span>
+        </div>
+      </header>
+
+      <!-- Placeholder state (If no patient selected) -->
+      <div id="patient-no-selection-view" class="empty-state-card">
+        <i class="fa-solid fa-user-lock empty-icon"></i>
+        <h3>Select or Register a Patient Profile</h3>
+        <p>To view your appointments and schedule a new consultation, please select an existing patient profile from the sidebar dropdown, or click "Register New Profile" to create a new one.</p>
+      </div>
+
+      <!-- Tab: Book Appointment Form (Only shown if patient is selected) -->
+      <section class="patient-tab-content active" id="tab-p-book">
+        <div id="patient-booking-form-wrapper" class="content-split-layout hidden">
+          <!-- Left side: Booking Form -->
+          <div class="glass-card form-container border-patient">
+            <div class="card-header">
+              <i class="fa-solid fa-calendar-check card-header-icon icon-patient"></i>
+              <h3>Select Details</h3>
+            </div>
+            <form id="patient-appointment-form" onsubmit="handlePatientBook(event)">
+              <div class="form-group">
+                <label for="p-select-doctor">Consulting Doctor <span class="req">*</span></label>
+                <select id="p-select-doctor" required>
+                  <option value="" disabled selected>-- Select Doctor --</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group col-6">
+                  <label for="p-appointment-date">Preferred Date <span class="req">*</span></label>
+                  <input type="date" id="p-appointment-date" required>
+                </div>
+                <div class="form-group col-6">
+                  <label for="p-appointment-time">Appointment Time <span class="req">*</span></label>
+                  <input type="time" id="p-appointment-time" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="p-appointment-reason">Reason for Appointment <span class="req">*</span></label>
+                <input type="text" id="p-appointment-reason" placeholder="e.g. Regular cardiological review, skin rashes..." required>
+              </div>
+
+              <button type="submit" class="btn-primary btn-patient" id="btn-patient-submit">
+                <i class="fa-solid fa-circle-check"></i> Book Consultation
+              </button>
+            </form>
+          </div>
+
+          <!-- Right side: Patient instructions & DB feedback -->
+          <div class="glass-card info-card">
+            <div class="card-header">
+              <i class="fa-solid fa-circle-info card-header-icon"></i>
+              <h3>Real-Time DB Action</h3>
+            </div>
+            <div class="info-body">
+              <div class="info-step">
+                <span class="step-num step-patient-num">1</span>
+                <div>
+                  <strong>HTTP Request to Backend</strong>
+                  <p>When you click book, Node.js inserts a record into the <code class="code-sm">appointments</code> table.</p>
+                </div>
+              </div>
+              <div class="info-step">
+                <span class="step-num step-trigger">2</span>
+                <div>
+                  <strong>Trigger Fires Instantly</strong>
+                  <p>A database Trigger <code class="code-sm">after_appointment_insert</code> catches this action and automatically inserts a record into the audit log. (View this log in the Developer Lab!)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: Booking History (Only shown if patient is selected) -->
+      <section class="patient-tab-content" id="tab-p-history">
+        <div id="patient-history-wrapper" class="glass-card hidden">
+          <div class="card-header justify-between">
+            <div class="header-title-flex">
+              <i class="fa-solid fa-receipt card-header-icon icon-patient"></i>
+              <h3>Your Consultation History</h3>
+              <span class="table-source-info">Personal records filtered from <code class="code-highlight">upcoming_appointments_view</code></span>
+            </div>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Appt ID</th>
+                  <th>Doctor Name</th>
+                  <th>Specialization</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="patient-history-table-body">
+                <tr>
+                  <td colspan="7" class="text-center text-muted">No appointments found for this patient.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: How view works (Patient) -->
+      <section class="patient-tab-content" id="tab-p-viewinfo">
+        <div class="glass-card">
+          <div class="card-header">
+            <i class="fa-solid fa-lightbulb card-header-icon icon-patient"></i>
+            <h3>How Your Data is Fetched: SQL Views</h3>
+          </div>
+          <div class="section-desc">
+            <p>In a standard database, appointments are stored as ID numbers (e.g. Patient ID: 3, Doctor ID: 1). Instead of performing complex joins directly in the backend code, this application queries a virtual table called <code class="code-highlight">upcoming_appointments_view</code>.</p>
+          </div>
+          <div class="view-visualizer-box">
+            <div class="view-source-grid">
+              <div class="source-table blue-card">
+                <h4>Table: Patients</h4>
+                <ul>
+                  <li>patient_id: <span class="txt-val">3</span></li>
+                  <li>name: <span class="txt-val">"Jane Smith"</span></li>
+                </ul>
+              </div>
+              <div class="source-table purple-card">
+                <h4>Table: Doctors</h4>
+                <ul>
+                  <li>doctor_id: <span class="txt-val">1</span></li>
+                  <li>name: <span class="txt-val">"Dr. Sarah Jenkins"</span></li>
+                </ul>
+              </div>
+              <div class="source-table green-card">
+                <h4>Table: Appointments</h4>
+                <ul>
+                  <li>appointment_id: <span class="txt-val">#102</span></li>
+                  <li>reason: <span class="txt-val">"General Checkup"</span></li>
+                </ul>
+              </div>
+            </div>
+            <div class="arrow-down-divider"><i class="fa-solid fa-angles-down"></i> Joins on Keys </div>
+            <div class="virtual-view-output">
+              <h4>SQL View: <code class="code-sm">upcoming_appointments_view</code></h4>
+              <p>SELECT appointment_id, patient_name, doctor_name, reason FROM appointments JOIN ...</p>
+              <div class="view-row-result">
+                <span><strong>Appt ID:</strong> #102</span> | <span><strong>Patient:</strong> Jane Smith</span> | <span><strong>Doctor:</strong> Dr. Sarah Jenkins</span> | <span><strong>Reason:</strong> General Checkup</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Patient Registration Modal overlay -->
+    <div id="patient-reg-modal" class="modal-overlay hidden">
+      <div class="modal-card border-patient">
+        <div class="modal-header">
+          <i class="fa-solid fa-user-plus icon-patient"></i>
+          <h3>Register New Patient Profile</h3>
+          <button class="modal-close" onclick="closePatientRegModal()">&times;</button>
+        </div>
+        <form id="patient-reg-form" onsubmit="handlePatientRegister(event)">
+          <div class="form-group">
+            <label for="reg-name">Full Name <span class="req">*</span></label>
+            <input type="text" id="reg-name" placeholder="e.g. John Miller" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-email">Email Address <span class="req">*</span></label>
+            <input type="text" id="reg-email" placeholder="e.g. john.miller@email.com" required>
+          </div>
+          <div class="form-group">
+            <label for="reg-phone">Phone Number <span class="req">*</span></label>
+            <input type="text" id="reg-phone" placeholder="e.g. 555-0123" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-6">
+              <label for="reg-dob">Date of Birth <span class="req">*</span></label>
+              <input type="date" id="reg-dob" required>
+            </div>
+            <div class="form-group col-6">
+              <label for="reg-gender">Gender <span class="req">*</span></label>
+              <select id="reg-gender" required>
+                <option value="" disabled selected>-- Select --</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <button type="submit" class="btn-primary btn-patient">
+            <i class="fa-solid fa-user-check"></i> Register Account
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ====================================================================
+       3. DOCTOR WORKSPACE
+       ==================================================================== -->
+  <div id="portal-doctor" class="app-container portal-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar doctor-sidebar">
+      <div class="logo-area" onclick="goHome()">
+        <i class="fa-solid fa-user-md logo-icon icon-doctor"></i>
+        <div class="logo-text">
+          <span class="logo-title">Doctor Console</span>
+          <span class="logo-subtitle">MediFlow Clinic</span>
+        </div>
+      </div>
+
+      <div class="profile-selection-box">
+        <label for="doctor-selector">Select Active Doctor</label>
+        <select id="doctor-selector" onchange="onDoctorSelect()">
+          <option value="" disabled selected>-- Select Doctor --</option>
+        </select>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-btn active" id="btn-d-queue" onclick="switchDoctorTab('d-queue')">
+          <i class="fa-solid fa-list-check"></i> Patient Queue
+        </button>
+        <button class="nav-btn" id="btn-d-cursor" onclick="switchDoctorTab('d-cursor')">
+          <i class="fa-solid fa-file-invoice"></i> Daily Reports (Cursor)
+        </button>
+      </nav>
+
+      <button class="btn-logout" onclick="goHome()">
+        <i class="fa-solid fa-right-from-bracket"></i> Exit Portal
+      </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="top-header">
+        <div>
+          <h1 id="doctor-page-title">Patient Queue</h1>
+          <p id="doctor-page-subtitle">Select your doctor profile to load your patient consultation schedules</p>
+        </div>
+        <div class="doctor-profile-badge hidden" id="doctor-profile-badge">
+          <i class="fa-solid fa-user-md"></i> <span id="current-doctor-name">Dr. Name</span>
+        </div>
+      </header>
+
+      <!-- Placeholder state (If no doctor selected) -->
+      <div id="doctor-no-selection-view" class="empty-state-card">
+        <i class="fa-solid fa-lock empty-icon icon-doctor"></i>
+        <h3>Select a Doctor Profile</h3>
+        <p>To view your medical schedule, update patient appointment status, and generate daily cursor reports, please select your doctor profile from the sidebar dropdown.</p>
+      </div>
+
+      <!-- Tab: Patient Queue (Only shown if doctor selected) -->
+      <section class="doctor-tab-content active" id="tab-d-queue">
+        <div id="doctor-queue-wrapper" class="glass-card hidden">
+          <div class="card-header justify-between">
+            <div class="header-title-flex">
+              <i class="fa-solid fa-stethoscope card-header-icon icon-doctor"></i>
+              <h3>Consultation Queue</h3>
+              <span class="table-source-info">Sourced from <code class="code-highlight">upcoming_appointments_view</code></span>
+            </div>
+            <div class="filter-controls">
+              <select id="doctor-queue-filter-status" onchange="filterDoctorQueue()">
+                <option value="ALL">All Statuses</option>
+                <option value="Scheduled">Scheduled</option>
+                <option value="Completed">Completed</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
+          <p class="section-desc">Updating a patient's status triggers the MySQL trigger <code class="code-sm">after_appointment_update</code>, logging the modification automatically in the system audit table.</p>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Appt ID</th>
+                  <th>Patient Name</th>
+                  <th>Contact</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="doctor-queue-table-body">
+                <tr>
+                  <td colspan="8" class="text-center text-muted">No appointments found.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: Cursor Stored Procedure -->
+      <section class="doctor-tab-content" id="tab-d-cursor">
+        <div id="doctor-reports-wrapper" class="content-split-layout hidden">
+          <!-- Left: Report Generator Form -->
+          <div class="glass-card form-container border-doctor">
+            <div class="card-header">
+              <i class="fa-solid fa-calculator card-header-icon icon-doctor"></i>
+              <h3>Stored Procedure Report Engine</h3>
+            </div>
+            <p class="section-desc">Select a date to run the database cursor. The MySQL stored procedure will use a cursor to loop through appointments and construct a formatted summary.</p>
+            
+            <form id="doctor-report-form" onsubmit="handleDoctorGenerateReport(event)">
+              <div class="form-group">
+                <label for="doctor-report-date">Select Report Date <span class="req">*</span></label>
+                <input type="date" id="doctor-report-date" required>
+              </div>
+              <button type="submit" class="btn-primary btn-doctor" id="btn-doctor-generate-report">
+                <i class="fa-solid fa-gears"></i> Run SQL Cursor SP
+              </button>
+            </form>
+
+            <div class="inner-code-card">
+              <h5>Stored Procedure Code</h5>
+              <pre><code class="code-sm">DECLARE appt_cursor CURSOR FOR
+    SELECT appointment_time, patient_name, status...
+OPEN appt_cursor;
+-- Loops each row, formats, and saves</code></pre>
+            </div>
+          </div>
+
+          <!-- Right: Report Viewer -->
+          <div class="glass-card flex-col-card">
+            <div class="card-header justify-between">
+              <div class="header-title-flex">
+                <i class="fa-solid fa-file-invoice-dollar card-header-icon icon-doctor"></i>
+                <h3>Generated Daily Summary</h3>
+              </div>
+              <span class="report-timestamp" id="doctor-report-timestamp-badge">No report run</span>
+            </div>
+            <div class="report-output-box" id="doctor-report-output-text">
+              Select a date on the left and click "Run SQL Cursor SP" to execute the database engine and view the compiled schedule summary.
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+
+  <!-- ====================================================================
+       4. DBMS DEVELOPER LAB (ADMIN PORTAL)
+       ==================================================================== -->
+  <div id="portal-developer" class="app-container portal-screen">
+    <!-- Sidebar -->
+    <aside class="sidebar developer-sidebar">
+      <div class="logo-area" onclick="goHome()">
+        <i class="fa-solid fa-terminal logo-icon icon-developer"></i>
+        <div class="logo-text">
+          <span class="logo-title">Developer Lab</span>
+          <span class="logo-subtitle">MediFlow System</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-btn active" id="btn-dev-stats" onclick="switchDevTab('dev-stats')">
+          <i class="fa-solid fa-chart-line"></i> Dashboard &amp; Stats
+        </button>
+        <button class="nav-btn" id="btn-dev-logs" onclick="switchDevTab('dev-logs')">
+          <i class="fa-solid fa-receipt"></i> Trigger Audit Logs
+        </button>
+        <button class="nav-btn" id="btn-dev-reports" onclick="switchDevTab('dev-reports')">
+          <i class="fa-solid fa-folder-open"></i> Generated Reports
+        </button>
+        <button class="nav-btn" id="btn-dev-schema" onclick="switchDevTab('dev-schema')">
+          <i class="fa-solid fa-file-code"></i> SQL Code Schema
+        </button>
+      </nav>
+
+      <button class="btn-logout" onclick="goHome()">
+        <i class="fa-solid fa-right-from-bracket"></i> Exit Portal
+      </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="top-header">
+        <div>
+          <h1 id="dev-page-title">Dashboard &amp; Statistics</h1>
+          <p id="dev-page-subtitle">General metrics and direct inspection of MySQL database objects</p>
+        </div>
+        <div class="current-time-display">
+          <i class="fa-solid fa-database"></i> <span>MySQL 8.0</span>
+        </div>
+      </header>
+
+      <!-- Tab: Stats -->
+      <section class="dev-tab-content active" id="tab-dev-stats">
+        <div class="stats-grid">
+          <div class="stat-card border-left-blue">
+            <div class="stat-icon-wrapper val-blue">
+              <i class="fa-solid fa-user-injured"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Total Patients</span>
+              <h3 class="stat-value" id="dev-stat-patients">0</h3>
+            </div>
+          </div>
+          <div class="stat-card border-left-green">
+            <div class="stat-icon-wrapper val-green">
+              <i class="fa-solid fa-user-md"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Total Doctors</span>
+              <h3 class="stat-value" id="dev-stat-doctors">0</h3>
+            </div>
+          </div>
+          <div class="stat-card border-left-purple">
+            <div class="stat-icon-wrapper val-purple">
+              <i class="fa-solid fa-calendar-check"></i>
+            </div>
+            <div class="stat-info">
+              <span class="stat-label">Total Appointments</span>
+              <h3 class="stat-value" id="dev-stat-appointments">0</h3>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="card-header">
+            <i class="fa-solid fa-circle-info card-header-icon icon-developer"></i>
+            <h3>MediFlow Global Schedule List (Raw View Data)</h3>
+          </div>
+          <p class="section-desc">Queries the view <code class="code-highlight">upcoming_appointments_view</code> which joins three tables automatically in the database server.</p>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Appt ID</th>
+                  <th>Patient Name</th>
+                  <th>Contact</th>
+                  <th>Doctor Name</th>
+                  <th>Specialization</th>
+                  <th>Date &amp; Time</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="dev-raw-table-body">
+                <tr>
+                  <td colspan="8" class="text-center text-muted">Loading appointments...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: Trigger logs -->
+      <section class="dev-tab-content" id="tab-dev-logs">
+        <div class="glass-card">
+          <div class="card-header justify-between">
+            <div class="header-title-flex">
+              <i class="fa-solid fa-database card-header-icon icon-developer"></i>
+              <h3>MySQL Trigger Audit Logs</h3>
+              <span class="table-source-info">Source: <code class="code-highlight">appointment_logs</code></span>
+            </div>
+            <button class="btn-secondary" onclick="fetchDeveloperLogs()"><i class="fa-solid fa-rotate"></i> Refresh Logs</button>
+          </div>
+          <p class="section-desc">The table below records entries written automatically by MySQL database triggers (<code class="code-sm">after_appointment_insert</code> and <code class="code-sm">after_appointment_update</code>) whenever an appointment is created or updated.</p>
+
+          <div class="table-responsive">
+            <table class="data-table log-table">
+              <thead>
+                <tr>
+                  <th>Log ID</th>
+                  <th>Appt ID</th>
+                  <th>Action</th>
+                  <th>Old Status</th>
+                  <th>New Status</th>
+                  <th>Timestamp</th>
+                  <th>Trigger Description</th>
+                </tr>
+              </thead>
+              <tbody id="dev-logs-table-body">
+                <tr>
+                  <td colspan="7" class="text-center text-muted">Loading logs...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: Saved Reports -->
+      <section class="dev-tab-content" id="tab-dev-reports">
+        <div class="glass-card">
+          <div class="card-header">
+            <i class="fa-solid fa-folder-open card-header-icon icon-developer"></i>
+            <h3>Previously Generated Cursor Reports</h3>
+          </div>
+          <p class="section-desc">Below are the aggregated reports saved inside the <code class="code-sm">daily_reports</code> table by the Cursor-based Stored Procedure.</p>
+
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 15%;">Report Date</th>
+                  <th>Summary Output</th>
+                  <th style="width: 25%;">Generated Timestamp</th>
+                </tr>
+              </thead>
+              <tbody id="dev-reports-table-body">
+                <tr>
+                  <td colspan="3" class="text-center text-muted">No reports generated in history.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tab: SQL Code Schema -->
+      <section class="dev-tab-content" id="tab-dev-schema">
+        <div class="schema-grid">
+          <!-- View Code -->
+          <div class="glass-card code-box-card">
+            <div class="card-header">
+              <i class="fa-solid fa-eye card-header-icon text-cyan"></i>
+              <h3>1. SQL Database View</h3>
+            </div>
+            <pre><code>CREATE VIEW upcoming_appointments_view AS
+SELECT 
+    a.appointment_id,
+    a.patient_id,
+    p.name AS patient_name,
+    p.phone AS patient_phone,
+    a.doctor_id,
+    d.name AS doctor_name,
+    d.specialization AS doctor_specialization,
+    a.appointment_date,
+    a.appointment_time,
+    a.status,
+    a.reason
+FROM appointments a
+JOIN patients p ON a.patient_id = p.patient_id
+JOIN doctors d ON a.doctor_id = d.doctor_id
+ORDER BY a.appointment_date ASC, a.appointment_time ASC;</code></pre>
+          </div>
+
+          <!-- Trigger Code -->
+          <div class="glass-card code-box-card">
+            <div class="card-header">
+              <i class="fa-solid fa-bolt card-header-icon text-purple"></i>
+              <h3>2. SQL Database Triggers</h3>
+            </div>
+            <pre><code>-- Log on appointment creation
+CREATE TRIGGER after_appointment_insert
+AFTER INSERT ON appointments
+FOR EACH ROW
+BEGIN
+    INSERT INTO appointment_logs (appointment_id, action_type, old_status, new_status, description)
+    VALUES (NEW.appointment_id, 'CREATE', NULL, NEW.status, 
+    CONCAT('New appointment booked for patient ID ', NEW.patient_id, ' with doctor ID ', NEW.doctor_id, ' for ', NEW.appointment_date));
+END;
+
+-- Log on status changes
+CREATE TRIGGER after_appointment_update
+AFTER UPDATE ON appointments
+FOR EACH ROW
+BEGIN
+    IF OLD.status <> NEW.status THEN
+        INSERT INTO appointment_logs (appointment_id, action_type, old_status, new_status, description)
+        VALUES (NEW.appointment_id, 'UPDATE', OLD.status, NEW.status, 
+        CONCAT('Appointment status changed from ', OLD.status, ' to ', NEW.status));
+    END IF;
+END;</code></pre>
+          </div>
+
+          <!-- Stored Procedure Code -->
+          <div class="glass-card code-box-card">
+            <div class="card-header">
+              <i class="fa-solid fa-list-ol card-header-icon text-green"></i>
+              <h3>3. SQL Stored Procedure with Cursor</h3>
+            </div>
+            <pre><code>CREATE PROCEDURE generate_daily_report(IN target_date DATE)
+BEGIN
+    DECLARE done INT DEFAULT FALSE;
+    DECLARE appt_time TIME;
+    DECLARE p_name VARCHAR(100);
+    DECLARE d_name VARCHAR(100);
+    DECLARE report_text TEXT DEFAULT '';
+    
+    -- Cursor to loop appointments for date
+    DECLARE appt_cursor CURSOR FOR
+        SELECT a.appointment_time, p.name, d.name 
+        FROM appointments a
+        JOIN patients p ON a.patient_id = p.patient_id
+        JOIN doctors d ON a.doctor_id = d.doctor_id
+        WHERE a.appointment_date = target_date;
+        
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+    
+    OPEN appt_cursor;
+    read_loop: LOOP
+        FETCH appt_cursor INTO appt_time, p_name, d_name;
+        IF done THEN LEAVE read_loop; END IF;
+        
+        SET report_text = CONCAT(report_text, 'Appt at ', appt_time, ': ', p_name, ' with Dr. ', d_name, '\n');
+    END LOOP;
+    CLOSE appt_cursor;
+    
+    -- Save compiled report
+    INSERT INTO daily_reports (report_date, report_summary)
+    VALUES (target_date, report_text)
+    ON DUPLICATE KEY UPDATE report_summary = VALUES(report_summary);
+END;</code></pre>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

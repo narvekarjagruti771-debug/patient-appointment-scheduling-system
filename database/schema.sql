@@ -253,27 +253,24 @@ DELIMITER ;
 
 -- Insert Sample Patients
 INSERT INTO patients (name, email, phone, dob, gender) VALUES
-('John Doe', 'john.doe@email.com', '555-0199', '1985-05-15', 'Male'),
-('Jane Smith', 'jane.smith@email.com', '555-0144', '1990-08-22', 'Female'),
-('Robert Johnson', 'robert.j@email.com', '555-0177', '1972-12-05', 'Male'),
-('Emily Davis', 'emily.d@email.com', '555-0188', '1998-03-10', 'Female'),
-('Michael Brown', 'michael.b@email.com', '555-0122', '1965-10-31', 'Male');
+('Annapoorna Hasabi', 'annapoorna@email.com', '555-0199', '1998-05-15', 'Female'),
+('Kavana Araladinni', 'kavana@email.com', '555-0144', '1999-08-22', 'Female'),
+('Amruta M', 'amruta@email.com', '555-0177', '1997-12-05', 'Female'),
+('Deepti Patil', 'deepti@email.com', '555-0188', '1998-03-10', 'Female'),
+('Ramya D', 'ramya@email.com', '555-0122', '1996-10-31', 'Female');
 
 -- Insert Sample Doctors
 INSERT INTO doctors (name, specialization, email, phone) VALUES
-('Sarah Jenkins', 'Cardiology', 'dr.jenkins@clinic.com', '555-0211'),
+('Jagruti Narvekar', 'Cardiology', 'dr.jagruti@clinic.com', '555-0211'),
 ('David Miller', 'Pediatrics', 'dr.miller@clinic.com', '555-0222'),
 ('Lisa Anderson', 'Dermatology', 'dr.anderson@clinic.com', '555-0233'),
 ('Thomas Taylor', 'General Medicine', 'dr.taylor@clinic.com', '555-0244');
 
 -- Insert Sample Appointments
--- Note: Setting appointment dates relative to current date is best, 
--- but we will use fixed dates near May 2026 for demonstration.
 INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status, reason) VALUES
-(1, 4, '2026-05-23', '09:00:00', 'Scheduled', 'Annual General Health Checkup'),
+(1, 1, '2026-05-23', '09:00:00', 'Scheduled', 'Annual Health Checkup with Dr. Jagruti Narvekar'),
 (2, 2, '2026-05-23', '10:30:00', 'Scheduled', 'Child Vaccination and Growth Review'),
-(3, 1, '2026-05-23', '14:00:00', 'Scheduled', 'Cardiovascular Checkup, Chest discomfort'),
+(3, 1, '2026-05-23', '14:00:00', 'Scheduled', 'Cardiovascular Checkup with Dr. Jagruti Narvekar'),
 (4, 3, '2026-05-24', '11:00:00', 'Scheduled', 'Skin rash consultation'),
 (5, 4, '2026-05-24', '15:30:00', 'Scheduled', 'Follow-up on Lab Test Results'),
--- An already completed appointment
 (1, 3, '2026-05-20', '10:00:00', 'Completed', 'Acne treatment followup');

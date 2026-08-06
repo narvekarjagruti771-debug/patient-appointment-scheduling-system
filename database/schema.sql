@@ -253,24 +253,24 @@ DELIMITER ;
 
 -- Insert Sample Patients
 INSERT INTO patients (name, email, phone, dob, gender) VALUES
-('Annapoorna Hasabi', 'annapoorna@email.com', '555-0199', '1998-05-15', 'Female'),
-('Kavana Araladinni', 'kavana@email.com', '555-0144', '1999-08-22', 'Female'),
-('Amruta M', 'amruta@email.com', '555-0177', '1997-12-05', 'Female'),
-('Deepti Patil', 'deepti@email.com', '555-0188', '1998-03-10', 'Female'),
-('Ramya D', 'ramya@email.com', '555-0122', '1996-10-31', 'Female');
+('Vidhi Joshi', 'vidhi.joshi@email.com', '555-0111', '1995-05-15', 'Female'),
+('Tirth Mishra', 'tirth.mishra@email.com', '555-0122', '1998-08-22', 'Male'),
+('Aditi Gupta', 'aditi.gupta@email.com', '555-0133', '1997-12-05', 'Female'),
+('Nidhi Saxena', 'nidhi.saxena@email.com', '555-0144', '1999-03-10', 'Female');
 
 -- Insert Sample Doctors
 INSERT INTO doctors (name, specialization, email, phone) VALUES
-('Jagruti Narvekar', 'Cardiology', 'dr.jagruti@clinic.com', '555-0211'),
-('David Miller', 'Pediatrics', 'dr.miller@clinic.com', '555-0222'),
-('Lisa Anderson', 'Dermatology', 'dr.anderson@clinic.com', '555-0233'),
-('Thomas Taylor', 'General Medicine', 'dr.taylor@clinic.com', '555-0244');
+('Anupama Patel', 'Cardiology', 'dr.anupama@clinic.com', '555-0211'),
+('Kirtan Bhatia', 'Orthopedics', 'dr.kirtan@clinic.com', '555-0222'),
+('Riya Singh', 'Dermatology', 'dr.riya@clinic.com', '555-0233'),
+('Anmol Bhatia', 'General Medicine', 'dr.anmol@clinic.com', '555-0244'),
+('Jagruti Narvekar', 'Pediatrics', 'dr.jagruti@clinic.com', '555-0255');
 
 -- Insert Sample Appointments
 INSERT INTO appointments (patient_id, doctor_id, appointment_date, appointment_time, status, reason) VALUES
-(1, 1, '2026-05-23', '09:00:00', 'Scheduled', 'Annual Health Checkup with Dr. Jagruti Narvekar'),
-(2, 2, '2026-05-23', '10:30:00', 'Scheduled', 'Child Vaccination and Growth Review'),
-(3, 1, '2026-05-23', '14:00:00', 'Scheduled', 'Cardiovascular Checkup with Dr. Jagruti Narvekar'),
-(4, 3, '2026-05-24', '11:00:00', 'Scheduled', 'Skin rash consultation'),
-(5, 4, '2026-05-24', '15:30:00', 'Scheduled', 'Follow-up on Lab Test Results'),
-(1, 3, '2026-05-20', '10:00:00', 'Completed', 'Acne treatment followup');
+(1, 5, '2026-05-23', '09:00:00', 'Scheduled', 'Pediatric Consultation with Dr. Jagruti Narvekar'),
+(2, 1, '2026-05-23', '10:30:00', 'Scheduled', 'Cardiovascular Checkup with Dr. Anupama Patel'),
+(3, 3, '2026-05-23', '14:00:00', 'Scheduled', 'Dermatology Consultation with Dr. Riya Singh'),
+(4, 4, '2026-05-24', '11:00:00', 'Scheduled', 'General Health Checkup with Dr. Anmol Bhatia'),
+(1, 2, '2026-05-24', '15:30:00', 'Scheduled', 'Orthopedic Follow-up with Dr. Kirtan Bhatia'),
+(2, 1, '2026-05-25', '16:00:00', 'Scheduled', 'Cardiology Review with Dr. Anupama Patel');
